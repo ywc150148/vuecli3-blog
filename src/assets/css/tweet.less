@@ -1,0 +1,219 @@
+.tweet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding-bottom: 1rem;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+
+  .van-nav-bar {
+    background: rgba(255, 255, 255, 0);
+
+    .van-icon {
+      color: #ffffff;
+      text-shadow: 0px 0px 6px #555555;
+      font-size: 24px;
+    }
+  }
+
+  .tweet-individual-navbar {
+    background: rgba(0, 0, 0, 0.3);
+    .van-icon {
+      font-size: inherit;
+    }
+  }
+
+  .tweet-wrap {
+    position: relative;
+
+    .van-pull-refresh {
+      min-height: 13rem;
+    }
+
+    .tweet-wrap_cover {
+      position: relative;
+      width: 375px;
+      height: 262px;
+
+      &::after {
+        position: absolute;
+        content: "";
+        width: 100%;
+        height: 312px;
+        top: -312px;
+        left: 0;
+        background: #555555;
+        z-index: -1;
+      }
+
+      .tweet-wrap_cover__cover {
+        position: relative;
+        top: -50px;
+        width: 100%;
+        height: 312px;
+        z-index: 3;
+      }
+
+      .tweet-wrap_cover__head-wrap {
+        z-index: 4;
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+
+        .tweet-wrap_cover__head {
+          width: 2.1333rem;
+          height: 2.1333rem;
+          border-radius: 3px;
+          overflow: hidden;
+          box-shadow: 0px 0px 3px #555555;
+        }
+
+        .tweet-wrap_cover__head-right {
+          margin-left: 10px;
+        }
+
+        .tweet-wrap_cover__head-right___name {
+          width: 6rem;
+          color: #ffffff;
+          font-size: 14px;
+          text-shadow: 0px 0px 6px #555555;
+          line-height: 1;
+        }
+
+        .tweet-wrap_cover__head-right___autograph {
+          width: 6rem;
+          line-height: 1;
+          color: #e9e9e9;
+          text-shadow: 0px 0px 6px #555555;
+          font-size: 12px;
+        }
+
+      }
+
+    }
+
+    .tweet-list {
+      padding: 20px 0;
+      width: 100%;
+      box-sizing: border-box;
+      background: #ffffff;
+
+      .tweet-list_wrap {
+        .tweet-list_item {
+          position: relative;
+          padding: 10px 10px 10px 58px;
+          width: 100%;
+          box-sizing: border-box;
+
+          .tweet-list_item__l {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 3px;
+            overflow: hidden;
+
+            .van-image {
+              width: 40px;
+              height: 40px;
+            }
+          }
+
+          .tweet-list_item__content {
+            p {
+              margin: 0;
+              margin-bottom: 5px;
+            }
+
+            .tweet-list_item__content___name {
+              font-size: 14px;
+              font-weight: bold;
+              letter-spacing: 1px;
+              color: #576d95;
+            }
+
+            .tweet-list_item__content___text {
+              font-size: 14px;
+              line-height: 1.6;
+              letter-spacing: 1px;
+              word-wrap: break-word;
+              word-break: normal;
+            }
+
+            .tweet-list_item__content___images {
+              .van-image {
+                width: 200px;
+                height: 150px;
+              }
+
+              .van-image__error {
+                position: relative;
+                margin: 0;
+                top: auto;
+                left: auto;
+                right: auto;
+                bottom: auto;
+                width: 200px;
+                // height: 200px;
+              }
+            }
+
+            .tweet-list_item__content___images-more {
+              .van-image {
+                margin: 0;
+                margin-bottom: 1px;
+                margin-right: 1px;
+                width: 101px;
+                height: 101px;
+                flex-grow: 0;
+                flex-basis: 101px;
+              }
+
+              .van-image__error {
+                margin-bottom: 1px;
+                margin-right: 1px;
+                width: 101px;
+                height: 101px;
+                flex-grow: 0;
+                flex-basis: 101px;
+              }
+            }
+
+            .tweet-list_item__content___bottom {
+              margin-top: 12px;
+              color: #999999;
+
+              .tweet-list_item__content___bottom-date {
+                font-size: 12px;
+              }
+
+              .van-icon {
+                display: inline-block;
+                margin-left: 30px;
+                font-size: 18px;
+                vertical-align: middle;
+              }
+
+              span {
+                display: inline-block;
+                margin-left: 6px;
+                font-size: 12px;
+              }
+            }
+          }
+        }
+
+        .van-divider {
+          margin: 0;
+        }
+      }
+
+      .finished {
+        margin-top: 1rem;
+      }
+    }
+  }
+}
