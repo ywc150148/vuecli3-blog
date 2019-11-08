@@ -15,34 +15,23 @@
                 height="0.8rem"
                 round
                 lazy-load
-                :src="BASEURL+data.authorID.head_img"
+                :src="data.author.avatar_url"
               >
                 <template v-slot:loading>
                   <van-loading type="spinner" size="20"/>
                 </template>
                 <template v-slot:error>加载失败</template>
               </van-image>
-              <span class="article-details_head__author">{{data.authorID.nickname}}</span>
+              <span class="article-details_head__author">{{data.author.loginname}}</span>
             </div>
           </div>
-          <div @click="$toast('即将开发')">
+          <div @click="$toast('功能不开放')">
             <van-button plain type="primary" size="mini">+ 关注</van-button>
           </div>
         </div>
-        <div id="blog-details-content" class="article-details_content">
-          <mavon-editor
-            v-model="data.content"
-            :ishljs="true"
-            :codeStyle="code_style"
-            :subfield="false"
-            :defaultOpen="'preview'"
-            :toolbarsFlag="false"
-            :editable="false"
-            :scrollStyle="true"
-            ref="md"
-          ></mavon-editor>
-
-          <div class="article-details_content__createtime">发布于： {{data.meta.createAt|getTimeAgo}}</div>
+        <div class="article-details_content">
+          <div v-html="data.content"></div>
+          <div class="article-details_content__createtime">发布于： {{data.create_at|getTimeAgo}}</div>
         </div>
 
         <div class="article-details_reply" v-if="data.reply_count">
@@ -81,7 +70,7 @@
         </div>
 
         <div class="article-details_bottom flex-nowrap-between-center">
-          <div class="article-details_bottom__l" @click="$toast('即将开发')">
+          <div class="article-details_bottom__l" @click="$toast('功能不开放')">
             <div>
               <van-icon name="edit"></van-icon>
               <span>写评论...</span>
@@ -91,15 +80,11 @@
             <div class="flex-nowrap-between-center">
               <div>
                 <van-icon name="eye-o"/>
-                <span>{{data.views}}</span>
-              </div>
-              <div>
-                <van-icon name="good-job-o"/>
-                <span>{{data.likes}}</span>
+                <span>{{data.visit_count}}</span>
               </div>
               <div>
                 <van-icon name="chat-o"/>
-                <span>{{data.comments}}</span>
+                <span>{{data.reply_count}}</span>
               </div>
             </div>
           </div>
@@ -111,24 +96,11 @@
       </div>
       <div v-if="error">出错了...</div>
     </div>
-
-    <van-image-preview v-model="showImagePre" :showIndex="false" :images="images">
-      <template v-slot:index>第{{ index }}页</template>
-    </van-image-preview>
   </div>
 </template>
 
 <script>
-import { mavonEditor } from "mavon-editor";
-import {
-  NavBar,
-  Skeleton,
-  Divider,
-  Image,
-  Button,
-  Loading,
-  ImagePreview
-} from "vant";
+import { NavBar, Skeleton, Divider,Image,Button,Loading } from "vant";
 
 export default {
   name: "articleDetails",
@@ -140,19 +112,12 @@ export default {
     [Image.name]: Image,
     [Button.name]: Button,
     [Loading.name]: Loading,
-    [ImagePreview.name]: ImagePreview,
-    mavonEditor
   },
   data() {
     return {
       id: "",
       data: "",
-      error: false,
-      BASEURL,
-      code_style: "atelier-estuary-dark",
-      showImagePre: false,
-      index: 0,
-      images: []
+      error: false
     };
   },
   computed: {},
@@ -163,14 +128,11 @@ export default {
   mounted() {
     this.getData();
   },
+  destroyed() {},
   methods: {
     getData() {
       this.$axios
-        .get(RESTFULAPI.public.blogDetails, {
-          params: {
-            _id: this.id
-          }
-        })
+        .get(API.node.topics_details + this.id)
         .then(response => {
           this.data = response.data.data;
           document.title = response.data.data.title;
@@ -179,30 +141,12 @@ export default {
           this.$toast("获取文章详情失败");
           this.error = true;
         });
-    },
-    clickImg(e) {
-      if (e.target.nodeName.toLowerCase() === "img") {
-        this.images = [e.target.src];
-        this.showImagePre = true;
-      }
-    }
-  },
-  updated() {
-    let blog = document.getElementById("blog-details-content");
-    if (blog !== null) {
-      blog.addEventListener("click", this.clickImg, false);
-    }
-  },
-  destroyed() {
-    let blog = document.getElementById("blog-details-content");
-    if (blog !== null) {
-      blog.removeEventListener("click", this.clickImg, false);
     }
   }
 };
 </script>
 
-<style scopen lang="less">
+<style lang="less">
 .article-details {
   position: relative;
 
@@ -222,7 +166,7 @@ export default {
     .article-details_title {
       margin: 0;
       padding: 0 10px 0;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
     }
 
@@ -241,101 +185,27 @@ export default {
     }
 
     .article-details_content {
+      padding: 10px 10px;
       width: 100%;
-      padding: 10px 5px;
-      overflow: auto;
       box-sizing: border-box;
 
-      // .hljs {
-      //   padding: 10px 10px;
-      //   width: 100%;
-      //   overflow: auto;
-      //   box-sizing: border-box;
+      div,
+      pre {
+        max-width: 100%;
+        overflow: auto;
+      }
 
-      //   div,
-      //   pre {
-      //     max-width: 100%;
-      //     overflow: auto;
-      //   }
+      img {
+        display: block;
+        max-width: 100%;
+      }
 
-      //   img {
-      //     display: block;
-      //     margin-top: 5px;
-      //     max-width: 100%;
-      //   }
-
-      //   table tbody {
-      //     width: 100%;
-      //     overflow: auto !important;
-      //   }
-
-      //   table {
-      //     border-spacing: 0;
-      //     width: 100%;
-      //     overflow: auto !important;
-      //   }
-
-      //   table {
-      //     border: solid #ccc 1px;
-      //   }
-
-      //   table td,
-      //   table th {
-      //     border-left: 1px solid #ccc;
-      //     border-top: 1px solid #ccc;
-      //     padding: 8px;
-      //     text-align: left;
-      //   }
-
-      //   table th {
-      //     border-top: none;
-      //   }
-
-      //   table td:first-child,
-      //   table th:first-child {
-      //     border-left: none;
-      //   }
-
-      //   ol,
-      //   ul {
-      //     list-style: inherit !important;
-      //   }
-
-      //   ul,
-      //   ol {
-      //     padding: 0;
-      //     padding-left: 24px;
-      //     margin: 0;
-      //   }
-      //   li {
-      //     line-height: 24px;
-      //   }
-
-      //   p,
-      //   ul,
-      //   ol {
-      //     font-size: 16px;
-      //     line-height: 24px;
-      //   }
-
-      //   ol ol,
-      //   ul ol {
-      //     list-style-type: lower-roman;
-      //   }
-
-      //   ul {
-      //     list-style-type: disc !important;
-      //   }
-
-      //   ol {
-      //     list-style-type: decimal !important;
-      //   }
-      // }
+      table {
+        max-width: 100%;
+      }
 
       .article-details_content__createtime {
-        margin-top: 10px;
-        padding: 5px;
-        font-size: 12px;
+        font-size: 14px;
         color: #999999;
       }
     }
@@ -426,7 +296,7 @@ export default {
 
   .article-details_bottom {
     position: fixed;
-    z-index: 1600;
+    z-index: 4;
     bottom: 0;
     left: 0;
     padding: 5px 10px;

@@ -1,11 +1,21 @@
     // 引用axios和qs
-    const axios = require('axios')
+    const as = require('axios')
     const qs = require('qs');
     import Vue from 'vue'
+    import VueEvent from "./VueEvent.js";
 
-    axios.defaults.timeout = 15000; //设置请求超时时间
+    const axios = as.create({
+      timeout: 8000,
+      //超时设置
+      timeout: 8000,
+      //请求头设置
+      headers: {
+        "accept": "application/json",
+      }
+    })
 
-    // 设置 post、put 默认 Content-Type
+    // 设置 get，post、put 默认 Content-Type
+    axios.defaults.headers.get['Content-Type'] = 'application/json;charset=UTF-8';
     axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
     axios.defaults.headers.put['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
 
@@ -55,6 +65,11 @@
         let url = Object.prototype.toString.call(response.config.url) === '[object Undefined]' ? null : response.config.url;
         url && removeList(reqList, url)
 
+
+        if (Object.prototype.toString.call(response.data.code) !== '[object Undefined]') {
+          VueEvent.$emit("handleOrder", response.data.opCode);
+        }
+
         if (response.data.code == 1) {
           return Promise.reject(response)
         }
@@ -64,11 +79,13 @@
       error => {
 
         if (Object.prototype.toString.call(error.response) !== '[object Undefined]') {
-          console.log('error', error.response)
+
+          if (Object.prototype.toString.call(error.response.data.opCode) !== '[object Undefined]') {
+            VueEvent.$emit("handleOrder", error.response.data.opCode);
+          }
+
           Vue.toast(error.response.data.msg || "请求错误，状态码：" + error.response.status);
-       
         } else {
-          console.log("error------", error)
           reqList = [];
           Vue.toast(error.msg || "请求错误，状态码：" + error.response.status);
         }

@@ -21,7 +21,7 @@
         <p class="user-head_name van-ellipsis">{{user.nickname}}</p>
       </div>
       <div v-else>
-        <van-row type="flex" gutter="20" align="center" @click="handleShowLogin">
+        <van-row type="flex" gutter="20" align="center" @click="onShowLogin">
           <van-col>
             <van-image class="user-head_image" round fit="cover" lazy-load :src="stranger">
               <template v-slot:loading>
@@ -50,10 +50,11 @@
 </template>
 
 <script>
-import { ImagePreview } from "vant";
+import { ImagePreview, Row, Col, Image, Cell, Loading } from "vant";
 import { mapState, mapMutations } from "vuex";
 import { constants } from "fs";
 import stranger from "../../assets/images/stranger.png";
+import VueEvent from "../../utils/VueEvent.js";
 
 const images = [
   "https://img.yzcdn.cn/vant/apple-1.jpg",
@@ -63,12 +64,29 @@ const images = [
 ];
 
 export default {
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      // 通过 `vm` 访问组件实例
+      // 获取历史记录
+      let URL = document.URL;
+      let hash = URL.split("#");
+      vm.fromURL = hash[0] + "#" + from.fullPath;
+    });
+  },
   name: "user",
-  inject: ["handleShowLogin"],
+  inject: ["handleShowLogin", "handleClosed"],
+  components: {
+    [Row.name]: Row,
+    [Col.name]: Col,
+    [Image.name]: Image,
+    [Cell.name]: Cell,
+    [Loading.name]: Loading
+  },
   data() {
     return {
       stranger: stranger,
-      show: false
+      fromURL: ""
+      // show: false
     };
   },
   computed: {
@@ -79,11 +97,21 @@ export default {
     ...mapState(["isLogin", "user"])
   },
   created() {},
-  mounted() {},
+  mounted() {
+    // 触发前进后退事件
+    VueEvent.$on("popState", triggerPath => {
+      triggerPath === "/user" && this.popState();
+    });
+  },
   methods: {
     ...mapMutations(["loGin", "logOut"]),
-
+    popState() {
+      this.handleClosed();
+    },
     showImagePreview(href) {
+      // 替换历史记录
+      this.$tools.pushState(document.URL, this.fromURL);
+
       const instance = ImagePreview({
         images: [href], // 显示的图片
         lazyLoad: true,
@@ -92,20 +120,15 @@ export default {
         closeOnPopstate: true // 路由跳转时关闭图片
       });
     },
-    getData() {
-      this.$axios
-        .post(API.public.test, {
-          name: "222"
-        })
-        .then(function(response) {
-          console.log("结果：", response.data.a);
-        })
-        .catch(error => {
-          console.log(error);
-        });
+    onShowLogin() {
+      // 替换历史记录
+      this.$tools.pushState(document.URL, this.fromURL);
+      this.handleShowLogin();
     },
     handleManagMent() {
       if (!this.isLogin) {
+        // 替换历史记录
+        this.$tools.pushState(document.URL, this.fromURL);
         this.handleShowLogin();
       } else {
         this.pushHref("/user/management");

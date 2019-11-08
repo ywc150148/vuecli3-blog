@@ -25,11 +25,12 @@ function imgCorrect(EXIF, file, w = "") {
                 Orientation;
 
             if (/^data:image\/(\w+);base64,/i.test(file)) {
-                if (getFormat(this.result) == 'gif') {
+                
+                if (getFormat(file) == 'gif') {
                     resolve({
                         code: 0,
                         msg: 'gif',
-                        base64: this.result
+                        base64: file
                     });
                 }
                 createImg(file);
@@ -70,12 +71,13 @@ function imgCorrect(EXIF, file, w = "") {
                         // 获取Orientation
                         Orientation = EXIF.getTag(this, 'Orientation');
                     });
-                    deaw(img);
+                    
+                    draw(img);
                 }
             }
 
             // 绘制
-            function deaw(img) {
+            function draw(img) {
                 // 输出图片的宽度，默认为原图width
                 width = width || img.width;
 

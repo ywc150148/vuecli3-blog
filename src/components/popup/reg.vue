@@ -30,10 +30,18 @@
 </template>
 
 <script>
+import { Row,Col,Field,CellGroup,Button } from "vant";
 import { encrypt } from "../../utils/crypto-js";
 
 export default {
   inject: ["switchToLogin", "handleClosed"],
+  components: {
+    [Row.name]: Row,
+    [Col.name]: Col,
+    [Field.name]: Field,
+    [CellGroup.name]: CellGroup,
+    [Button.name]: Button,
+  },
   data() {
     return {
       name: "",

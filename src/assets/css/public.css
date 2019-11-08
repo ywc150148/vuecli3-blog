@@ -9,16 +9,28 @@
     flex-wrap: nowrap;
 }
 
+.flex-between {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.flex-nowrap-between {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
 .flex-center {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    justify-content: space-between;
 }
 
 .flex-nowrap-center {
     display: flex;
     flex-wrap: nowrap;
-    align-items: center;
+    justify-content: space-between;
 }
 
 .flex-between-center {

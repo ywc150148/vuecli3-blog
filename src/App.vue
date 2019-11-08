@@ -3,6 +3,7 @@
     <van-tabbar v-model="active" v-if="showTabbar">
       <van-tabbar-item to="/" icon="home-o">首页</van-tabbar-item>
       <van-tabbar-item to="/tweet" icon="good-job-o">社区</van-tabbar-item>
+      <!-- <van-tabbar-item to="/blog" icon="bullhorn-o">博客(暂时)</van-tabbar-item> -->
       <van-tabbar-item to="/notice" icon="bullhorn-o">通知</van-tabbar-item>
       <van-tabbar-item to="/user" icon="smile-o">我的</van-tabbar-item>
     </van-tabbar>
@@ -33,7 +34,7 @@
 </template>
 
 <script>
-import { Tabbar, TabbarItem } from "vant";
+import { Tabbar, TabbarItem, Popup } from "vant";
 import Login from "./components/popup/login.vue";
 import reg from "./components/popup/reg.vue";
 import VueEvent from "./utils/VueEvent.js";
@@ -43,6 +44,7 @@ export default {
   components: {
     [Tabbar.name]: Tabbar,
     [TabbarItem.name]: TabbarItem,
+    [Popup.name]: Popup,
     login: Login,
     reg: reg
   },
@@ -70,11 +72,23 @@ export default {
   },
   created() {},
   mounted() {
-    setTimeout(() => {
-      console.log("App.vue发送消息...")
-      VueEvent.$emit("onMsg", this.msg);
-    }, 3000);
+    // 触发命令
+    VueEvent.$on("handleOrder", opCode => {
+      if (opCode === 1) {
+        this.showPopup = true;
+        this.popupSet("login");
+      }
+    });
+
+    // 监听页面前进返回事件
+    if (window.history && window.history.pushState) {
+      window.addEventListener("popstate", this.popState, false); //false阻止默认事件
+    }
   },
+  destroyed() {
+    window.removeEventListener("popstate", this.popState, false);
+  },
+  //  跨级访问祖先组件数据
   provide() {
     return {
       handleShowLogin: () => {
@@ -91,26 +105,13 @@ export default {
     };
   },
   methods: {
-    handelGet() {
-      this.getData();
-    },
-    getData() {
-      this.$axios
-        .post(API.public.test, {
-          name: "222"
-        })
-        .then(function(response) {
-          console.log("结果：", response.data.a);
-        })
-        .catch(error => {
-          console.log(error);
-        });
+    popState() {
+      VueEvent.$emit("popState", this.$route.path);
     },
     popupSet(key) {
       for (let k in this.popupState) {
         this.popupState[k] = k == key ? true : false;
       }
-      // console.log(this.popupState)
     },
     handleClosed() {
       this.showPopup = false;
@@ -151,5 +152,69 @@ html {
 
 .add-padding {
   padding-bottom: 1rem;
+}
+
+#app .markdown-body {
+  padding: 0;
+
+  ol,
+  ul {
+    list-style: inherit !important;
+  }
+
+  ul {
+    list-style-type: disc !important;
+  }
+
+  ol {
+    list-style-type: decimal !important;
+  }
+
+  .v-note-wrapper .v-note-panel .v-note-show .v-show-content {
+    padding: 0;
+  }
+
+  .highlight pre,
+  .markdown-body pre {
+    padding: 0;
+  }
+
+  .highlight pre,
+  pre {
+    padding: 0px !important;
+  }
+
+  mark {
+    padding: 0 4px;
+    color: #fff;
+    background: #555555;
+  }
+}
+
+#app .article-details_content {
+
+  .v-note-wrapper {
+    min-height: auto !important;
+  }
+
+  .markdown-body {
+    background-color: none !important;
+    box-shadow: none !important;
+
+    .v-note-op {
+      background-color: none !important;
+    }
+
+    .v-note-img-wrapper {
+      display: none !important;
+    }
+
+    .v-show-content,
+    .scroll-style,
+    .scroll-style-border-radius {
+      background-color: none !important;
+      background: none !important;
+    }
+  }
 }
 </style>

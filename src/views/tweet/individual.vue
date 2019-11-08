@@ -19,7 +19,7 @@
             fit="cover"
             lazy-load
             src="https://img.yzcdn.cn/vant/cat.jpeg"
-            @click="handleImg(1,0,'https://img.yzcdn.cn/vant/cat.jpeg')"
+            @click="handleImg(1,0,['https://img.yzcdn.cn/vant/cat.jpeg'],false)"
           >
             <template v-slot:loading>
               <van-loading type="spinner" size="20"/>
@@ -34,7 +34,7 @@
                 fit="cover"
                 lazy-load
                 :src="BASEURL+author.head_img"
-                @click="handleImg(1,0,BASEURL+author.head_img)"
+                @click="handleImg(1,0,[author.head_img],false)"
               >
                 <template v-slot:loading>
                   <van-loading type="spinner" size="20"/>
@@ -42,7 +42,7 @@
                 <template v-slot:error>加载失败</template>
               </van-image>
               <div class="tweet-wrap_cover__head-right">
-                <p class="tweet-wrap_cover__head-right___name van-ellipsis">{{author.name}}</p>
+                <p class="tweet-wrap_cover__head-right___name van-ellipsis">{{author.nickname}}</p>
                 <p class="tweet-wrap_cover__head-right___autograph van-ellipsis">我是一条虫，来自这个世界</p>
               </div>
             </div>
@@ -58,7 +58,10 @@
             @load="getTweet"
           >
             <div class="tweet-list_wrap" v-for="(item,index) in list" :key="index">
-              <div class="tweet-list_item tweet-individual-list_item">
+              <div
+                class="tweet-list_item tweet-individual-list_item"
+                @click="pushHref('/tweet/details/'+item._id)"
+              >
                 <div class="tweet-list_item__content">
                   <p class="tweet-list_item__content___text" v-text="item.content"></p>
                   <div
@@ -72,7 +75,7 @@
                       fit="cover"
                       lazy-load
                       :src="BASEURL +img"
-                      @click="handleImg(item.images.length,img_index,BASEURL +img)"
+                      @click.stop="handleImg(item.images.length,img_index,item.images,true)"
                     >
                       <template v-slot:loading>
                         <van-loading type="spinner" size="20"/>
@@ -82,30 +85,29 @@
                   </div>
                   <div class="tweet-list_item__content___bottom flex-nowrap-between-center">
                     <div class="tweet-list_item__content___bottom-date">
+                      <span>{{item.creatTime|dateGet}}</span>
                       <span
                         class="tweet-list_item__content___bottom-delete"
                         v-if="oneself"
-                        @click="onDelete(item._id,index)"
+                        @click.stop="onDelete(item._id,index)"
                       >删除</span>
-                      <span>{{item.creatTime|getTimeAgo}}</span>
                     </div>
                     <div>
                       <div class="flex-nowrap-between-center">
-                        <div>
-                          <van-icon name="like-o"/>
-                          <span>{{item.likes}}</span>
+                        <div @click.stop="onLike(item._id)">
+                          <van-icon :name="item.isLike===true?'like':'like-o'"/>
+                          <span>{{item.likes|totalQuantity}}</span>
                         </div>
                         <div>
                           <van-icon name="chat-o"/>
-                          <span>{{item.comments.length}}</span>
+                          <span>{{item.reviewQuantity|totalQuantity}}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <van-divider v-show="index!=list.length-1"></van-divider>
+              <van-divider></van-divider>
             </div>
 
             <van-divider class="finished" v-show="finished">没有更多了</van-divider>
@@ -116,6 +118,7 @@
     <van-image-preview
       v-model="showPreview"
       :startPosition="previewIndex"
+      :showIndex="showIndex"
       lazyLoad
       :images="previewImages"
     />
@@ -131,11 +134,25 @@
 </template>
 
 <script>
-import { NavBar, PullRefresh, List, Divider, ImagePreview, Dialog } from "vant";
+import {
+  NavBar,
+  PullRefresh,
+  List,
+  Divider,
+  Dialog,
+  Image,
+  Loading
+} from "vant";
 import { mapState, mapMutations } from "vuex";
 import VueEvent from "../../utils/VueEvent.js";
 
 export default {
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      // 通过 `vm` 访问组件实例
+      if (from.path === "/") vm.fromPath = "/";
+    });
+  },
   name: "tweet",
   inject: ["handleShowLogin"],
   components: {
@@ -143,8 +160,9 @@ export default {
     [PullRefresh.name]: PullRefresh,
     [List.name]: List,
     [Divider.name]: Divider,
-    [ImagePreview.name]: ImagePreview,
-    [Dialog.Component.name]: Dialog.Component
+    [Dialog.Component.name]: Dialog.Component,
+    [Image.name]: Image,
+    [Loading.name]: Loading
   },
   data() {
     return {
@@ -167,7 +185,9 @@ export default {
       oneself: false,
       showDialog: false,
       delete_id: "",
-      delete_index:''
+      delete_index: "",
+      fromPath: "",
+      showIndex: true
     };
   },
   computed: {
@@ -188,16 +208,20 @@ export default {
   created() {},
   mounted() {
     this.docHeight = document.documentElement.clientHeight - 212 + "px";
-    VueEvent.$on("onMsg", msg => {
-      console.log("Tweet收到消息是：", msg);
-    });
-
     this.authorID = this.$route.params.authorID;
 
-    // this.getTweet();
+    // 触发前进后退事件
+    VueEvent.$on("popState", triggerPath => {
+      triggerPath === this.$route.path && this.popState();
+    });
   },
   destroyed() {},
   methods: {
+    popState() {
+      if (this.showPreview) {
+        this.showPreview = false;
+      }
+    },
     getTweet() {
       this.$axios
         .get(RESTFULAPI.public.tweet, {
@@ -240,39 +264,6 @@ export default {
           }
         });
     },
-
-    getData() {
-      this.$axios
-        .get(API.public.tweet_list)
-        .then(response => {
-          this.list = [...this.list, ...response.data.data];
-
-          // 加载状态结束
-          this.loading = false;
-
-          // 数据全部加载完成
-          if (this.list.length >= 130) {
-            this.finished = true;
-          }
-
-          if (this.isLoading === true) {
-            this.$toast("刷新成功");
-            this.isLoading = false;
-          }
-
-          this.error = false;
-        })
-        .catch(error => {
-          this.$toast("获取文章详情失败");
-          this.error = true;
-          this.loading = false;
-
-          if (this.isLoading === true) {
-            this.$toast("刷新失败");
-            this.isLoading = false;
-          }
-        });
-    },
     onRefresh() {
       this.list = [];
       this.finished = false;
@@ -281,8 +272,17 @@ export default {
       this.previousId = "";
       this.getTweet();
     },
-    handleImg(count, index, src) {
-      this.previewImages = new Array(count).fill(src);
+    handleImg(count, index, arr, showIndex) {
+      // 替换历史记录
+      this.$tools.pushState(document.URL, this.fromURL);
+      let reg = /:\/\//i;
+
+      this.previewImages = arr.map(item => {
+        let url = reg.test(item) ? item : BASEURL + item;
+        return url;
+      });
+
+      this.showIndex = showIndex;
       this.showPreview = true;
       this.previewIndex = index;
     },
@@ -301,30 +301,56 @@ export default {
       }
     },
     onClickLeft() {
-      this.$router.go(-1);
+      if (this.fromPath == "/") {
+        // 非此站跳转来源，点击返回 /tweet
+        this.pushHref("/tweet");
+      } else {
+        this.$router.go(-1);
+      }
     },
-    onDelete(_id,index) {
+    onDelete(_id, index) {
       this.delete_id = _id;
       this.delete_index = index;
       this.showDialog = true;
     },
     handleCancel() {
       this.delete_id = "";
-      this.delete_index = '';
+      this.delete_index = "";
     },
     handleDelete() {
       this.$axios
-        .post(RESTFULAPI.public.tweetDelete,{
-          delete_id:this.delete_id
+        .post(RESTFULAPI.public.tweetDelete, {
+          delete_id: this.delete_id
         })
         .then(response => {
           this.$toast(response.data.msg);
-          this.list.splice(this.delete_index,1);
-          
+          this.list.splice(this.delete_index, 1);
         })
         .catch(error => {
           this.$toast(error.data.msg || "退出登录发生错误");
         });
+    },
+    onLike(_id) {
+      if (this.isLogin !== true) {
+        this.$toast("请先登录");
+        return;
+      }
+
+      this.$axios
+        .post(RESTFULAPI.public.tweetLike, {
+          _id
+        })
+        .then(response => {
+          let index = this.list.findIndex(item => {
+            if (item._id == _id) {
+              item.isLike = response.data.isLike;
+              item.likes = response.data.likes;
+            }
+
+            return item._id == _id;
+          });
+        })
+        .catch(error => {});
     }
   }
 };

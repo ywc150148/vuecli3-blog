@@ -13,13 +13,14 @@
 </template>
 
 <script>
-import { Dialog } from "vant";
+import { Dialog,Button } from "vant";
 import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "userSet",
   components: {
-    [Dialog.Component.name]: Dialog.Component
+    [Dialog.Component.name]: Dialog.Component,
+    [Button.name]: Button,
   },
   data() {
     return {
@@ -46,7 +47,6 @@ export default {
             this.$toast(error.data.msg|| error || "退出登录发生错误");
           });
       } catch(err) {
-        console.log(err)
       }
 
       this.logOut();

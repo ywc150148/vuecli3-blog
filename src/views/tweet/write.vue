@@ -26,7 +26,7 @@
           v-model="fileList"
           multiple
           :max-count="9"
-          preview-size="120"
+          preview-size="115"
           :after-read="onAfterRead"
         ></van-uploader>
       </div>
@@ -35,70 +35,80 @@
 </template>
 
 <script>
-import { NavBar, Uploader, Dialog } from "vant";
+import {
+  NavBar,
+  Uploader,
+  Dialog,
+  Field,
+  Button,
+  Loading,
+  CellGroup
+} from "vant";
 import EXIF from "exif-js";
 import imgCompress from "../../utils/img-compress.js";
 import imgCorrect from "../../utils/img-correct";
+import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "",
   components: {
     [NavBar.name]: NavBar,
-    [Uploader.name]: Uploader
+    [Uploader.name]: Uploader,
+    [Field.name]: Field,
+    [Button.name]: Button,
+    [Loading.name]: Loading,
+    [CellGroup.name]: CellGroup
   },
   data() {
     return {
       content: "",
       fileList: [],
       unSend: true,
-      pathArray: [],
+      pathArray: []
     };
   },
-  computed: {},
+  computed: {
+    ...mapState(["isLogin", "user"])
+  },
   created() {},
   mounted() {
-    console.log(
-      'this.$tools.getStorage("tweetDraft")',
-      this.$tools.getStorage("tweetDraft")
-    );
-
     // 草稿
     const tweetDraft = this.$tools.getStorage("tweetDraft");
-    if (tweetDraft !== null) {
+    if (tweetDraft !== null && tweetDraft.user.name == this.user.name) {
       this.content = tweetDraft.content;
       this.fileList = tweetDraft.fileList;
     }
   },
-  beforeDestroy() {
+  destroyed() {},
+  beforeDestroy() {},
+  beforeRouteLeave(to, from, next) {
+    to.meta.newData = !this.unSend;
+    next();
   },
   methods: {
     onClickLeft() {
       const flag = this.content != "" || this.fileList.length > 0;
       // 保存草稿
-      if (this.unSend === true && flag === true) {
-        console.log("1");
+      if (this.unSend === true && flag === true && this.isLogin === true) {
         Dialog.confirm({
           title: "是否保存草稿？"
         })
           .then(() => {
             this.$tools.setStorage("tweetDraft", {
+              user:this.user,
               content: this.content,
               fileList: this.fileList
             });
-            // this.pushHref("/tweet");
-            
-        this.$router.replace('/tweet')
+            this.$router.replace("/tweet");
           })
           .catch(() => {
             // 确定删除，刷新页面销毁时不会保存
             this.$tools.removeStorage("tweetDraft");
-            // this.pushHref("/tweet");
-            
-        this.$router.replace('/tweet')
+
+            this.$router.replace("/tweet");
           });
       } else {
-        // this.pushHref("/tweet");
-        this.$router.replace('/tweet')
+        this.$router.replace("/tweet");
       }
     },
     onClickRight() {
@@ -110,8 +120,6 @@ export default {
         this.fileList.forEach((item, index) => {
           imgArr.push(item.content);
         });
-
-        console.log("imgarr", imgArr);
 
         const toast = this.$toast.loading({
           duration: 0,
@@ -147,8 +155,6 @@ export default {
       } else {
         this.postTweet(this.content);
       }
-
-      // this.$toast("按钮");
     },
     postTweet(content, images = "") {
       this.$axios
@@ -209,13 +215,6 @@ export default {
   .tweet-write-wrap {
     [class*="van-hairline"]::after {
       border: none;
-    }
-
-    .tweet-write-uploader {
-      width: 100%;
-      padding: 10px 5px 10px 15px;
-      box-sizing: border-box;
-      // background: firebrick;
     }
   }
 }

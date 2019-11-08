@@ -101,3 +101,64 @@
 // }
 
 // calculateSize(bs)
+
+//  getImageFormat = (url) => {
+//     let reg = /:\/\//i; 
+//     return reg.test(url);
+// }
+
+
+
+// console.log(getImageFormat('http://kkdj/dwd/dwwd'))
+
+// let dateGet = (timestamp = '') => {
+//     let date = timestamp !=''?new Date(timestamp):new Date,
+//         year = date.getFullYear(),
+//         month = add0(date.getMonth() + 1),
+//         day = add0(date.getDate()),
+//         hour = add0(date.getHours()),
+//         minute = add0(date.getMinutes()),
+//         second = add0(date.getSeconds()),
+//         dayOfweek = date.getDay() === 0 ? 7 : date.getDay();
+
+//     function add0(n) {
+//         return n < 10 ? n = '0' + n : n;
+//     }
+
+//     return {
+//         year,
+//         month,
+//         day,
+//         hour,
+//         minute,
+//         second,
+//         dayOfweek,
+//         date_time: `${year}/${month}/${day} ${hour}:${minute}:${second}`,
+//     }
+// }
+
+// console.log('dateGet',dateGet(1472048779952))
+
+// let reg = /isshow=1|\?/i;
+// let flag = reg.test("isshow=1");
+// console.log("flag=",flag)
+
+// let str = ' '; 
+// console.log("s.replace('')",str.replace(/\s/g,"")==='')
+
+// 正则读取md格式所有图片
+// let md = `一段文字![第一张图片描述](123.jpeg)又一段文字![]对对对对对对![第二张图片描述.jpeg](456.jpeg)![第三张图片描述](789.gif)`;
+
+// let reg = /(?:!\[(.*?)\]\((.*?)\))/g,
+//     data, arr = [];
+
+// while (data = reg.exec(md)) {
+//     console.log("data[2]",data[2])
+//     arr.push(data[2]);
+// }
+
+
+// console.log("arr", arr)
+
+let set6 = new Set([1, 2, 2, 3, 4, 3, 5])
+console.log('distinct 1:', set6)

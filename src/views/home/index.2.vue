@@ -6,29 +6,12 @@
 
     <div class="home-tabs-wrap home-tabs">
       <van-tabs v-model="active" animated>
-        <van-tab v-for="(item,cat_index) in category" :key="cat_index" :title="item.name">
-          <div class="home-tabs_tab__list" :ref="'tab__list-'+cat_index">
-            <!-- 骨架屏 -->
-            <div
-              class="home-article-skeleton"
-              v-show="!category[cat_index].list.length && !category[cat_index].finished && category[active].isLoading"
-            >
-              <van-skeleton
-                v-for="skeleton in 3"
-                :key="skeleton"
-                avatar
-                avatar-size="40px"
-                title
-                :row="4"
-              />
-            </div>
-
-            <!-- 下拉 -->
+        <van-tab v-for="(item,cat_index) in category" :key="cat_index" :title="item.tab">
+          <div  class="home-tabs_tab__list" :ref="'tab__list-'+cat_index">
             <van-pull-refresh
               v-model="category[cat_index].isLoading"
+              :disabled="!category[cat_index].list.length"
               @refresh="onRefresh"
-              :disabled="category[cat_index].loading"
-              style="min-height:9rem"
             >
               <!-- 分类页 -->
               <van-list
@@ -36,20 +19,29 @@
                 :error.sync="category[cat_index].error"
                 error-text="请求失败，点击重新加载"
                 :finished="category[cat_index].finished"
-                :finished-text="category[cat_index].finished_text"
+                :finished-text="finished_text"
                 @load="onLoad"
               >
+                <!-- 骨架屏 -->
+                <div class="home-article-skeleton" v-show="!category[cat_index].list.length">
+                  <van-skeleton
+                    v-for="skeleton in 3"
+                    :key="skeleton"
+                    avatar
+                    avatar-size="40px"
+                    title
+                    :row="4"
+                  />
+                </div>
+
                 <!-- 文章预览 -->
                 <div
                   class="home-article"
                   v-for="(item,index) in category[cat_index].list"
                   :key="index"
-                  @click="pushHref('/article/details/' + item._id)"
+                  @click="pushHref('/article/details/' + item.id)"
                 >
-                  <div class="home-article_title-wrap flex-nowrap-center">
-                    <p class="home-article_title">{{item.title}}</p>
-                    <span v-if="item.categoryID">{{item.categoryID.name}}{{item.subCategoryID? '/'+item.subCategoryID.name:''}}</span>
-                  </div>
+                  <div class="home-article_title">{{item.title}}</div>
                   <div class="home-article_pre flex-nowrap-between-center">
                     <div class="home-article_pre__l">
                       <div class="home-article_pre__l___author flex-nowrap">
@@ -60,7 +52,7 @@
                             height="0.5rem"
                             round
                             lazy-load
-                            :src="BASEURL + item.authorID.head_img"
+                            :src="item.author.avatar_url"
                           >
                             <template v-slot:loading>
                               <van-loading type="spinner" size="20"/>
@@ -69,20 +61,20 @@
                           </van-image>
                         </div>
 
-                        <div class="home-article_pre__l___author-name">{{item.authorID.nickname}}</div>
+                        <div class="home-article_pre__l___author-name">{{item.author.loginname}}</div>
                       </div>
 
-                      <div
-                        class="home-article_pre__l-paragraph line-clamp-2"
-                      >{{item.content|cutStr}}</div>
+                      <!-- <div class="home-article_pre__l-paragraph line-clamp-2">
+                        {{item.paragraph}}
+                      </div>-->
                     </div>
-                    <div class="home-article_pre__r" v-if="item.cover">
+                    <div class="home-article_pre__r" v-if="item.hasImg">
                       <van-image
                         fit="cover"
-                        width="2rem"
-                        height="1.5rem"
+                        width="2.3rem"
+                        height="1.6rem"
                         lazy-load
-                        :src="item.cover"
+                        :src="item.image"
                       >
                         <template v-slot:loading>
                           <van-loading type="spinner" size="20"/>
@@ -95,15 +87,11 @@
                     <div class="flex-nowrap">
                       <div>
                         <van-icon name="eye-o"/>
-                        <span>{{item.views}}</span>
-                      </div>
-                      <div>
-                        <van-icon :name="item.isLike===true?'good-job':'good-job-o'"/>
-                        <span>{{item.likes|totalQuantity}}</span>
+                        <span>{{item.visit_count}}</span>
                       </div>
                       <div>
                         <van-icon name="chat-o"/>
-                        <span>{{item.comments|totalQuantity}}</span>
+                        <span>{{item.reply_count}}</span>
                       </div>
                     </div>
                   </div>
@@ -114,33 +102,16 @@
         </van-tab>
       </van-tabs>
     </div>
-
-    <div class="home-go-to-Write" :class="{'home-go-to-Write-hide':isScroll}" v-if="isLogin" @click="pushHref('/blog/write')">
-      <van-icon name="plus"/>
-    </div>
   </div>
 </template>
 
 <script>
-import {
-  Search,
-  Tab,
-  Tabs,
-  List,
-  PullRefresh,
-  Skeleton,
-  Image,
-  Loading
-} from "vant";
-import { mapState, mapMutations } from "vuex";
+import { Search, Tab, Tabs, List, PullRefresh, Skeleton, Image,Loading } from "vant";
+import { setTimeout, setInterval } from "timers";
 
 export default {
   name: "",
-  filters: {
-    cutStr: function(str) {
-      return str.substring(0, 200);
-    }
-  },
+  mixins: [],
   components: {
     [Search.name]: Search,
     [Tab.name]: Tab,
@@ -163,13 +134,10 @@ export default {
       scrollTop: 0,
       isScroll: false,
       isLoading: false,
-      limit: 10,
-      BASEURL
+      limit: 10
     };
   },
-  computed: {
-    ...mapState(["isLogin", "user"])
-  },
+  computed: {},
   watch: {
     $route(n, o) {
       // 回到此页面 滚动条滚动到上次的位置
@@ -193,33 +161,18 @@ export default {
   methods: {
     getCategory() {
       this.$axios
-        .get(RESTFULAPI.public.blog, {
-          params: {
-            limit: this.limit
-          }
-        })
+        .get(API.public.category)
         .then(response => {
-          this.category = response.data.category;
-          this.category.forEach((item, index) => {
-            if (index === 0) {
-              item.list = response.data.data;
-              item.finished = response.data.nomore;
-              item.previousId = response.data.previousId;
-              item.count = response.data.count;
-            } else {
-              item.list = [];
-              item.finished = false;
-              item.previousId = "";
-              item.count = 0;
-            }
-
-            item.loading = false;
-            item.isLoading = false;
+          console.log("response.data.data",response.data.data)
+          this.category = response.data.data;
+          this.category.forEach(item => {
+            item.list = [];
+            item.finished = false;
             item.error = false;
+            item.isLoading = false;
             item.page = 1;
-            item.finished_text =
-              item.count > 0 && item.finished ? "没有更多了" : "没有数据";
           });
+          this.finished_text = "没有更多了";
         })
         .catch(error => {
           this.$toast("获取分类失败");
@@ -227,44 +180,41 @@ export default {
     },
     getData(active) {
       let params = {
-        categoryID: this.category[active]._id,
-        previousId: this.category[active].previousId,
+        tab: this.category[active].name,
+        page: this.category[active].page,
         limit: this.limit
       };
 
       this.$axios
-        .get(RESTFULAPI.public.blog, { params })
+        .get(API.node.topics, { params })
         .then(response => {
           let data = response.data.data;
           this.category[active].list = [...this.category[active].list, ...data];
-          this.category[active].finished = response.data.nomore;
-          this.category[active].previousId = response.data.previousId;
-          this.category[active].count = response.data.count;
-          this.category[active].finished_text =
-            this.category[active].count > 0 && this.category[active].finished
-              ? "没有更多了"
-              : "没有数据";
-
           this.loading = false;
-          this.category[active].error = false;
+          this.category[active].page += 1;
+
+          // if (this.category[active].list.length >= 30) {
+          //   this.category[active].finished = true;
+          // }
+
           if (this.category[active].isLoading === true) {
             this.category[active].isLoading = false;
             this.$toast("刷新成功");
           }
+
+          this.category[active].error = false;
         })
         .catch(error => {
-          this.loading = false;
           this.category[active].error = true;
           if (this.category[active].isLoading === true) {
             this.$toast("刷新失败");
+            this.category[active].isLoading = false;
           }
-          this.category[active].isLoading = false;
-          this.onLoad();
         });
     },
     onScrollTop(e) {
       // 只记录首页的滚动
-      if (e.target.scrollTop && this.$route.path === "/") {
+      if (e.target.scrollTop && this.$route.path === '/') {
         this.scrollTop = e.target.scrollTop;
       }
     },
@@ -272,18 +222,12 @@ export default {
       this.$toast(this.keywords);
     },
     onLoad() {
-      if (this.category[this.active].error) {
-        this.onRefresh();
-      } else {
-        this.getData(this.active);
-      }
+      this.getData(this.active);
     },
     onRefresh() {
       this.category[this.active].list = [];
       this.category[this.active].page = 1;
       this.category[this.active].finished = false;
-      this.category[this.active].previousId = "";
-      this.category[this.active].error = false;
       this.loading = true;
       this.onLoad();
     }
@@ -377,26 +321,16 @@ export default {
     box-sizing: border-box;
     background: #ffffff;
 
-    .home-article_title-wrap {
+    .home-article_title {
       margin-bottom: 5px;
-
-      .home-article_title {
-        margin: 0;
-        font-size: 14px;
-        font-weight: bold;
-      }
-
-      span {
-        margin-left: 10px;
-        font-size: 12px;
-        color: #999999;
-      }
+      line-height: 1.6;
+      font-size: 14px;
+      font-weight: bold;
     }
 
     .home-article_pre__l {
       flex: 1;
       .home-article_pre__l___author {
-        padding-bottom: 5px;
         height: 0.5rem;
         line-height: 0.5rem;
 
@@ -405,8 +339,6 @@ export default {
         }
 
         .home-article_pre__l___author-name {
-          display: inline-block;
-          height: 0.5rem;
           font-size: 13px;
           font-weight: bold;
         }
@@ -416,17 +348,14 @@ export default {
         font-size: 13px;
         line-height: 1.6;
         max-height: 1.1rem;
-        word-break: break-all;
       }
     }
 
     .home-article_pre__r {
-      width: 2rem;
-      height: 1.5rem;
-      margin-left: 10px;
+      margin-left: 2px;
 
       .van-image {
-        border-radius: 6px;
+        border-radius: 3px;
         overflow: hidden;
       }
     }
@@ -449,28 +378,6 @@ export default {
       }
     }
   }
-}
-
-.home-go-to-Write {
-  position: fixed;
-  width: 1.2rem;
-  height: 1.2rem;
-  background: #ffffff;
-  right: 20px;
-  bottom: 1.8rem;
-  z-index: 999;
-  border-radius: 100%;
-  text-align: center;
-  line-height: 1.4rem;
-  font-size: 18px;
-  color: #ffffff;
-  box-shadow: 0px 0px 2px #999999;
-  background: #017fff;
-  transition: .3s;
-}
-
-.home-go-to-Write-hide {
-  transform: scale(0)
 }
 
 // 滚动时隐藏输入框

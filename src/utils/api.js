@@ -1,5 +1,6 @@
 // 开发环境 生产环境 路径设置
-const BASEURL = process.env.NODE_ENV == 'development' ? 'http://127.0.0.1:4000' : '';
+const BASEURL = process.env.NODE_ENV == 'development' ? '/api' : 'https://www.eoway.cn';
+// const BASEURL = process.env.NODE_ENV == 'development' ? 'http://127.0.0.1:4000' : 'https://www.eoway.cn';
 
 function addUrl(url, obj) {
     if (Object.prototype.toString.call(obj) === '[object Object]') {
@@ -43,7 +44,13 @@ let restful = {
         uploadImg: '/v1/upload/uploadImg',
         tweet: '/v1/tweet/',
         tweetPost: '/v1/tweet/post',
-        tweetDelete: '/v1/tweet/delete'
+        tweetDelete: '/v1/tweet/delete',
+        tweetLike: '/v1/tweet/like',
+        tweetComment: '/v1/tweet/comment',
+        tweetDetails: '/v1/tweet/details/', // /v1/tweet/details/:tweetID
+        blog: '/v1/blog',
+        blogDetails: '/v1/blog/details',
+        category: '/v1/category'
     }
 }
 

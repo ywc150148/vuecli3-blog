@@ -7,8 +7,141 @@
     line-height: 0.8rem;
 }
 
-.tweet-write-uploader {
-    .van-uploader__upload {
-        background: #f2f2f2
+// 公用评论列表
+.article-details_reply__item {
+    margin-bottom: 20px;
+
+    .article-details_reply__author {
+        margin-bottom: 10px;
+        padding: 0 10px;
+        height: 40px;
+
+        .van-image {
+            margin-right: 5px;
+        }
+
+        .article-details_reply__author___name {
+            font-size: 14px;
+        }
     }
+
+    .article-details_reply__content {
+        margin: 0 10px;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 3px;
+        font-size: 14px;
+
+        div,
+        pre {
+            max-width: 100%;
+            overflow: auto;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        table {
+            max-width: 100%;
+        }
+
+        p {
+            margin: auto;
+            font-size: 14px;
+        }
+    }
+
+    .article-details_reply__time {
+        padding: 0 10px;
+        font-size: 12px;
+        color: #999999;
+
+        .article-details_reply-btn {
+            font-size: 12px;
+            color: rgb(86, 156, 214);
+        }
+    }
+
+    .article-details_reply__target-user {
+        .article-details_reply__target-span {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 12px;
+            color: #666666;
+        }
+    }
+}
+
+.tweet-write {
+    .tweet-write-wrap {
+        .tweet-write-uploader {
+            .van-uploader {
+                padding: 15px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .van-uploader__preview {
+                margin: 0 0;
+                width: 115px;
+                height: 115px;
+                box-sizing: border-box;
+                overflow: hidden;
+
+                .van-image {
+                    padding: 2px;
+                    width: 115px !important;
+                    height: 115px !important;
+                    box-sizing: border-box;
+                }
+
+                .van-uploader__preview-image {
+                    position: relative;
+                    width: 115px !important;
+                    height: 115px !important;
+                }
+
+                .van-uploader__preview-delete {
+                    position: absolute;
+                    right: 0;
+                    bottom: 0;
+                }
+
+                .van-image__error,
+                .van-image__img,
+                .van-image__loading {
+                    width: 115px !important;
+                    height: 115px !important;
+                }
+            }
+
+            .van-uploader__upload {
+                margin: 3px 0;
+                width: 115px !important;
+                height: 115px !important;
+                border: none !important;
+                background: #f2f2f2;
+
+                .van-uploader__input {
+                    margin: 0;
+                    width: 115px !important;
+                    height: 115px !important;
+                }
+            }
+        }
+    }
+}
+
+.v-note-wrapper .v-note-panel .v-note-show .v-show-content {
+    padding: 5px !important;
+}
+
+.v-note-wrapper .v-note-panel .v-note-edit.divarea-wrapper .content-input-wrapper {
+    padding: 5px !important;
+}
+
+.v-note-wrapper .v-note-read-model {
+    padding: 5px !important;
 }

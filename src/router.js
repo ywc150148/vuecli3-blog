@@ -30,7 +30,7 @@ const router = new Router({
         title: '微社区',
         keep_alive: true
       }
-    },{
+    }, {
       path: '/tweet/individual/:authorID',
       name: 'individualTweet',
       component: () => import('./views/tweet/individual'),
@@ -40,12 +40,20 @@ const router = new Router({
     },
     {
       path: '/tweet/write',
-      name: 'write',
+      name: 'writeTweet',
       component: () => import('./views/tweet/write'),
       meta: {
         title: '写动态',
+        requireAuth: true,
       }
-
+    },
+    {
+      path: '/tweet/details/:tweetID',
+      name: 'tweetDetails',
+      component: () => import('./views/tweet/details'),
+      meta: {
+        title: '用户-微社区-详情',
+      }
     },
     {
       path: '/notice',
@@ -88,15 +96,29 @@ const router = new Router({
       meta: {
         title: '内容展示'
       }
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('./views/about'),
+    },{
+      path: '/blog',
+      name: 'blog',
+      component: () => import('./views/blog/'),
       meta: {
-        title: 'about'
+        title: '博客'
       }
-    }
+    },{
+      path: '/blog/write',
+      name: 'writeblog',
+      component: () => import('./views/blog/write'),
+      meta: {
+        title: '写博客',
+        requireAuth: true,
+      }
+    },{
+      path: '/category',
+      name: 'category',
+      component: () => import('./views/category/'),
+      meta: {
+        title: '分类管理'
+      }
+    },
   ]
 })
 
@@ -112,6 +134,7 @@ router.beforeEach((to, from, next) => {
     if (store.getters.getisLogin) {
       next();
     } else {
+      Vue.toast("请登录后操作");
       next({
         path: '/user',
         query: {

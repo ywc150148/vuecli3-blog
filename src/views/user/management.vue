@@ -75,6 +75,7 @@
       :title="titles[type]"
       show-cancel-button
       :beforeClose="onBeforeClose"
+      :closeOnPopstate="true"
       @cancel="onCancel"
       @confirm="onConfirm"
     >
@@ -122,15 +123,46 @@
 </template>
 
 <script>
-import { ImagePreview, Dialog } from "vant";
+import {
+  ImagePreview,
+  Dialog,
+  Uploader,
+  Picker,
+  Popup,
+  Image,
+  Field,
+  Button,
+  Cell,
+  CellGroup,
+  Loading
+} from "vant";
 import { mapState, mapMutations } from "vuex";
 import imgCompress from "../../utils/img-compress.js";
 import { encrypt } from "../../utils/crypto-js";
+import VueEvent from "../../utils/VueEvent.js";
 
 export default {
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      // 通过 `vm` 访问组件实例
+      // 获取历史记录
+      let URL = document.URL;
+      let hash = URL.split("#");
+      vm.fromURL = hash[0] + "#" + from.fullPath;
+    });
+  },
   name: "userManagement",
   components: {
-    [Dialog.Component.name]: Dialog.Component
+    [Dialog.Component.name]: Dialog.Component,
+    [Uploader.name]: Uploader,
+    [Picker.name]: Picker,
+    [Popup.name]: Popup,
+    [Image.name]: Image,
+    [Field.name]: Field,
+    [Button.name]: Button,
+    [Cell.name]: Cell,
+    [CellGroup.name]: CellGroup,
+    [Loading.name]: Loading
   },
   data() {
     return {
@@ -148,7 +180,8 @@ export default {
       errormsg2: "",
       sexs: ["隐藏", "男", "女"],
       sex: 0,
-      showPopup: false
+      showPopup: false,
+      fromURL: ""
     };
   },
   computed: {
@@ -156,9 +189,22 @@ export default {
   },
   mounted() {
     this.sex = this.user.sex;
+    // 触发前进后退事件
+    VueEvent.$on("popState", triggerPath => {
+      triggerPath === this.$route.path && this.popState();
+    });
   },
   methods: {
     ...mapMutations(["setUser"]),
+    popState() {
+      if (this.showDialog) {
+        this.showDialog = false;
+      }
+
+      if (this.showPopup) {
+        this.showPopup = false;
+      }
+    },
     beforeRead(file) {
       this.showUpload = true;
     },
@@ -175,23 +221,26 @@ export default {
     uploadImg(base64) {
       this.$axios
         .post(RESTFULAPI.public.uploadImg, {
-          type:'head',
-           base64Array:[base64]
+          type: "head",
+          base64Array: [base64]
         })
         .then(response => {
           this.updataInfo({ head_img: response.data.data.pathArray[0] }, () => {
-            this.setUser({ head_img: BASEURL + response.data.data.pathArray[0] });
+            this.setUser({
+              head_img: BASEURL + response.data.data.pathArray[0]
+            });
             this.onUnshowUpload();
           });
         })
-        .catch(error => {
-        });
+        .catch(error => {});
     },
     onUnshowUpload() {
       this.fileList.splice(0, 1);
       this.showUpload = false;
     },
     handleChange(type) {
+      // 替换历史记录 往后没有路由，使用此页面路由
+      this.$tools.pushState(document.URL, document.URL);
       this.type = type;
       this.showDialog = true;
 
@@ -208,6 +257,9 @@ export default {
         this.password = "";
         this.newpassword = "";
       }
+
+      // 关闭弹框，返回到虚拟url的前一页
+      this.$router.go(-1);
     },
     // 对话框点击确定
     onConfirm() {
@@ -233,6 +285,9 @@ export default {
           }
         );
       }
+
+      // 关闭弹框，返回到虚拟url的前一页
+      this.$router.go(-1);
     },
     // 点击对话框确定或取消后的拦截
     onBeforeClose(action, done) {
@@ -278,10 +333,14 @@ export default {
       done(); // 关闭弹框
     },
     handleChangeSex() {
+      // 替换历史记录
+      this.$tools.pushState(document.URL, document.URL);
       this.showPopup = true;
     },
     onSexCancel(e) {
       this.showPopup = false;
+      // 关闭弹框，返回到虚拟url的前一页
+      this.$router.go(-1);
     },
     onSexConfirm(e) {
       this.updataInfo(
@@ -293,6 +352,9 @@ export default {
           this.showPopup = false;
         }
       );
+
+      // 关闭弹框，返回到虚拟url的前一页
+      this.$router.go(-1);
     },
     handleName() {
       let n = Math.round(Math.random()),
@@ -317,7 +379,7 @@ export default {
         })
         .catch(error => {
           // 清除提示
-          toast.clear();
+          toast(error.data.msg);
         });
     }
   }

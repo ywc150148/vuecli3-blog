@@ -4,9 +4,10 @@
     <div>
       <ul>
         <li v-for="(item,index) in todoList" :key="index">
-          <div class="flex-nowrap-between-center">
+          <div class="flex-nowrap-between-center" @click="onClick(item.path)">
             <van-tag type="success" v-if="item.status===0">已完成</van-tag>
             <van-tag type="primary" v-if="item.status===1">待开发</van-tag>
+            <van-tag type="danger" v-if="item.status===3">开发中 <span v-if="item.path">可点击</span></van-tag>
             <van-tag v-if="item.status===2">待规划</van-tag>
             <span>{{item.name}}</span>
           </div>
@@ -75,19 +76,28 @@ export default {
         },
         tweetComment: {
           name: "用户微社区评论",
-          status: 1
+          status: 0
         },
         tweetLike: {
           name: "用户微社区点赞",
-          status: 1
+          status: 0
         },
         blog: {
           name: "用户博客",
-          status: 2
+          path:'/blog',
+          status: 0
         },
         markdown: {
           name: "markdown编辑器",
-          status: 2
+          status: 0
+        },
+        blogComment: {
+          name: "用户博客评论、点赞",
+          status: 1
+        },
+        focusOnUsers: {
+          name: "关注用户",
+          status: 1
         },
         socket: {
           name: "WebSocket即时通讯",
@@ -104,8 +114,7 @@ export default {
   watch: {},
   created() {},
   mounted() {
-    // this.$toast("即将开发，WebSocekt即时通讯")
-    // this.getData();
+    this.getData();
   },
   destroyed() {},
   methods: {
@@ -113,11 +122,14 @@ export default {
       this.$axios
         .get(RESTFULAPI.public.users)
         .then(response => {
-          console.log("response", response);
+          // console.log("response", response);
         })
         .catch(error => {
-          console.log("error", error);
+          // console.log("error", error);
         });
+    },
+    onClick(path) {
+      if(path) this.pushHref(path)
     }
   }
 };

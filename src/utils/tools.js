@@ -34,6 +34,10 @@ tools.isUndefined = (s) => {
     return Object.prototype.toString.call(s) === "[object Undefined]";
 }
 
+tools.isNull = (s) => {
+    return s === null || s === undefined || s.replace(/\s/g,"") ==='';
+}
+
 tools.setStorage = (key, value) => {
     localStorage.setItem(key, JSON.stringify(value));
     return tools.getStorage(key);
@@ -68,13 +72,17 @@ tools.timeAgo = (timeStamp) => {
         min = diffValue / (1000 * 60);
 
     if (year >= 1) {
-        return parseInt(year) + "年前";
+        // return parseInt(year) + "年前";
+        return tools.dateGet(timeStamp).date_time;
     } else if (month >= 1) {
-        return parseInt(month) + "月前";
+        // return parseInt(month) + "月前";
+        return tools.dateGet(timeStamp).date_time;
     } else if (week >= 1) {
-        return parseInt(week) + "周前";
+        // return parseInt(week) + "周前";
+        return tools.dateGet(timeStamp).date_time;
     } else if (day >= 1) {
-        return parseInt(day) + "天前";
+        // return parseInt(day) + "天前";
+        return tools.dateGet(timeStamp).date_time;
     } else if (hour >= 1) {
         return parseInt(hour) + "小时前";
     } else if (min >= 1) {
@@ -85,6 +93,37 @@ tools.timeAgo = (timeStamp) => {
 // 时间日期 转 毫秒时间戳
 tools.getTimeStamp = (dateStr) => {
     return Date.parse(dateStr.replace(/-/gi, "/"));
+}
+
+/* 获取日期、时间
+ *@method dateGet
+ *@timestamp 13位数，数字类型毫秒级时间戳
+ *@return {object}  dayOfweek：星期几
+ */
+tools.dateGet = (timestamp = '') => {
+    let date = timestamp != '' ? new Date(timestamp) : new Date,
+        year = date.getFullYear(),
+        month = add0(date.getMonth() + 1),
+        day = add0(date.getDate()),
+        hour = add0(date.getHours()),
+        minute = add0(date.getMinutes()),
+        second = add0(date.getSeconds()),
+        dayOfweek = date.getDay() === 0 ? 7 : date.getDay();
+
+    function add0(n) {
+        return n < 10 ? n = '0' + n : n;
+    }
+
+    return {
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        dayOfweek,
+        date_time: `${year}/${month}/${day} ${hour}:${minute}:${second}`,
+    }
 }
 
 /* 获取base64编码图片的格式
@@ -99,6 +138,22 @@ tools.getImageFormat = (base64) => {
         return result[1].toLowerCase();
     }
     return result;
+}
+
+/* 添加历史记录，替换历史记录，用于在当前页面点击返回时不跳转
+ *@method pushState
+ *@virtualURL 虚拟显示的url
+ *@URL 把虚拟url替换成的真正的URL
+ */
+tools.pushState = (virtualURL = document.URL, URL = document.URL) => {
+    if (window.history && window.history.pushState) {
+        // 添加历史记录
+        history.pushState(null, null, virtualURL);
+        // 替换历史记录
+        history.replaceState(null, null, URL);
+    } else {
+        return "不支持window.history && window.history.pushState"
+    }
 }
 
 tools.install = function (Vue, options) {

@@ -4,6 +4,7 @@ import './utils/tools'
 import router from './router'
 import store from './store'
 import axios from './utils/axios'
+import filter from './utils/filter'
 import {
   API,
   RESTFULAPI,
@@ -12,28 +13,15 @@ import {
 import 'amfe-flexible';
 import {
   Lazyload,
-  Row,
-  Col,
-  Popup,
-  Image,
-  Loading,
-  Field,
-  Cell,
-  CellGroup,
-  Button,
   Icon,
   Toast,
   Tag,
-  Picker,
-  Uploader,
   ImagePreview
 } from 'vant';
 
 Vue.use(Lazyload, {
   lazyComponent: true
-}).use(Row).use(Col).use(Popup).use(Image).use(Loading).use(Field).use(Cell);
-Vue.use(CellGroup).use(Button).use(Icon).use(Toast).use(Tag).use(Picker).use(Uploader);
-Vue.use(ImagePreview);
+}).use(Icon).use(Toast).use(Tag).use(ImagePreview);
 
 require('./utils/mock')
 
@@ -53,20 +41,29 @@ Vue.prototype.goBack = function (n = -1) {
 
 Vue.toast = Toast;
 
-Vue.filter('timeAgo', function (value) {
-  // 接收日期时间
-  if (!value) return ''
-  let ts = Vue.tools.getTimeStamp(value);
-  let time = Vue.tools.timeAgo(ts);
-  return time;
-})
 
-Vue.filter('getTimeAgo', function (utc) {
-  // utc 时间 2018-03-07T16:00:00.000Z
-  if (!utc) return '';
-  return Vue.tools.timeAgo(new Date(utc).getTime())
-})
+Object.keys(filter).forEach(key => Vue.filter(key, filter[key]))
 
+// Vue.filter('timeAgo', function (value) {
+//   // 接收日期时间
+//   if (!value) return ''
+//   let ts = Vue.tools.getTimeStamp(value);
+//   let time = Vue.tools.timeAgo(ts);
+//   return time;
+// })
+
+// Vue.filter('getTimeAgo', function (utc) {
+//   // utc 时间 2018-03-07T16:00:00.000Z
+//   if (!utc) return '';
+//   return Vue.tools.timeAgo(new Date(utc).getTime())
+// })
+
+
+// Vue.filter('dateGet', function (utc) {
+//   // utc 时间 2018-03-07T16:00:00.000Z
+//   if (!utc) return '';
+//   return Vue.tools.dateGet(new Date(utc).getTime()).date_time;
+// })
 
 Vue.config.productionTip = false;
 

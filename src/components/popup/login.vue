@@ -30,12 +30,20 @@
 </template>
 
 <script>
+import { Row,Col,Field,CellGroup,Button } from "vant";
 import { mapMutations } from "vuex";
 
 import { encrypt } from "../../utils/crypto-js";
 
 export default {
   inject: ["switchToReg", "handleClosed"],
+  components: {
+    [Row.name]: Row,
+    [Col.name]: Col,
+    [Field.name]: Field,
+    [CellGroup.name]: CellGroup,
+    [Button.name]: Button,
+  },
   data() {
     return {
       name: "",
