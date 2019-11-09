@@ -48,7 +48,9 @@
                 >
                   <div class="home-article_title-wrap flex-nowrap-center">
                     <p class="home-article_title">{{item.title}}</p>
-                    <span v-if="item.categoryID">{{item.categoryID.name}}{{item.subCategoryID? '/'+item.subCategoryID.name:''}}</span>
+                    <span
+                      v-if="item.categoryID"
+                    >{{item.categoryID.name}}{{item.subCategoryID? '/'+item.subCategoryID.name:''}}</span>
                   </div>
                   <div class="home-article_pre flex-nowrap-between-center">
                     <div class="home-article_pre__l">
@@ -115,7 +117,12 @@
       </van-tabs>
     </div>
 
-    <div class="home-go-to-Write" :class="{'home-go-to-Write-hide':isScroll}" v-if="isLogin" @click="pushHref('/blog/write')">
+    <div
+      class="home-go-to-Write"
+      :class="{'home-go-to-Write-hide':isScroll}"
+      v-if="isLogin"
+      @click="pushHref('/blog/write')"
+    >
       <van-icon name="plus"/>
     </div>
   </div>
@@ -269,7 +276,8 @@ export default {
       }
     },
     onSearch() {
-      this.$toast(this.keywords);
+      this.$toast("即将开发");
+      // this.$toast(this.keywords);
     },
     onLoad() {
       if (this.category[this.active].error) {
@@ -279,12 +287,12 @@ export default {
       }
     },
     onRefresh() {
+      this.loading = true;
       this.category[this.active].list = [];
       this.category[this.active].page = 1;
       this.category[this.active].finished = false;
       this.category[this.active].previousId = "";
       this.category[this.active].error = false;
-      this.loading = true;
       this.onLoad();
     }
   }
@@ -382,14 +390,19 @@ export default {
 
       .home-article_title {
         margin: 0;
+        line-height: 1.6;
         font-size: 14px;
         font-weight: bold;
       }
 
       span {
+        flex-shrink: 0;
+        flex-grow: 0;
         margin-left: 10px;
+        max-width: 2.2rem;
         font-size: 12px;
         color: #999999;
+        text-align: right;
       }
     }
 
@@ -466,11 +479,11 @@ export default {
   color: #ffffff;
   box-shadow: 0px 0px 2px #999999;
   background: #017fff;
-  transition: .3s;
+  transition: 0.3s;
 }
 
 .home-go-to-Write-hide {
-  transform: scale(0)
+  transform: scale(0);
 }
 
 // 滚动时隐藏输入框

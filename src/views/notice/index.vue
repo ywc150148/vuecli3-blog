@@ -1,6 +1,6 @@
 <template>
   <div class="notice">
-    <h1>toDdList</h1>
+    <h1>toDoList</h1>
     <div>
       <ul>
         <li v-for="(item,index) in todoList" :key="index">
@@ -83,16 +83,32 @@ export default {
           status: 0
         },
         blog: {
-          name: "用户博客",
+          name: "用户发布博客",
           path:'/blog',
           status: 0
         },
+        blogCategory: {
+          name: "博客分类",
+          status: 0
+        },
+        category: {
+          name: "分类管理",
+          status: 0
+        },
         markdown: {
-          name: "markdown编辑器",
+          name: "部署markdown编辑器",
+          status: 0
+        },
+        blogLike: {
+          name: "用户博客点赞",
           status: 0
         },
         blogComment: {
-          name: "用户博客评论、点赞",
+          name: "用户博客评论",
+          status: 1
+        },
+        blogSearch: {
+          name: "用户博客搜索",
           status: 1
         },
         focusOnUsers: {

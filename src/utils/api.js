@@ -50,7 +50,8 @@ let restful = {
         tweetDetails: '/v1/tweet/details/', // /v1/tweet/details/:tweetID
         blog: '/v1/blog',
         blogDetails: '/v1/blog/details',
-        category: '/v1/category'
+        blogLike: '/v1/blog/like',
+        category: '/v1/category',
     }
 }
 

@@ -42,7 +42,12 @@
             ref="md"
           ></mavon-editor>
 
-          <div class="article-details_content__createtime">发布于： {{data.meta.createAt|getTimeAgo}}</div>
+          <div class="article-details_tag">
+            <van-tag type="primary" v-if="data.categoryID">{{data.categoryID.name}}</van-tag>
+            <van-tag type="success" v-if="data.subCategoryID">{{data.subCategoryID.name}}</van-tag>
+          </div>
+
+          <div class="article-details_content__createtime">发布于： {{data.meta.createAt|dateGet}}</div>
         </div>
 
         <div class="article-details_reply" v-if="data.reply_count">
@@ -93,8 +98,8 @@
                 <van-icon name="eye-o"/>
                 <span>{{data.views}}</span>
               </div>
-              <div>
-                <van-icon name="good-job-o"/>
+              <div @click="onLike">
+                <van-icon :name="data.isLike===true?'good-job':'good-job-o'"/>
                 <span>{{data.likes}}</span>
               </div>
               <div>
@@ -185,6 +190,20 @@ export default {
         this.images = [e.target.src];
         this.showImagePre = true;
       }
+    },
+    onLike() {
+      this.$axios
+        .put(RESTFULAPI.public.blogLike, {
+          _id: this.id
+        })
+        .then(response => {
+          this.data.isLike = response.data.isLike;
+          this.data.likes = response.data.likes;
+          console.log("response", response);
+        })
+        .catch(error => {
+          console.log("error", error);
+        });
     }
   },
   updated() {
@@ -222,7 +241,7 @@ export default {
     .article-details_title {
       margin: 0;
       padding: 0 10px 0;
-      font-size: 18px;
+      font-size: 1.2em;
       font-weight: bold;
     }
 
@@ -410,6 +429,16 @@ export default {
       //     color: #999999;
       //   }
       // }
+    }
+
+    .article-details_tag {
+      .van-tag {
+        display: inline-block;
+        margin-right: 5px;
+        height: 14px;
+        line-height: 16px;
+        vertical-align: middle;
+      }
     }
   }
 
