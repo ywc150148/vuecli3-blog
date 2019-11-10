@@ -51,6 +51,7 @@ let restful = {
         blog: '/v1/blog',
         blogDetails: '/v1/blog/details',
         blogLike: '/v1/blog/like',
+        blogComment: '/v1/blog/comment',
         category: '/v1/category',
     }
 }

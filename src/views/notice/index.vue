@@ -105,10 +105,18 @@ export default {
         },
         blogComment: {
           name: "用户博客评论",
-          status: 1
+          status: 0
         },
         blogSearch: {
           name: "用户博客搜索",
+          status: 1
+        },
+        userBlog: {
+          name: "用户个人博客管理",
+          status: 1
+        },
+        userComments: {
+          name: "用户个人评论管理",
           status: 1
         },
         focusOnUsers: {

@@ -1,5 +1,5 @@
 <template>
-  <div class="article-details">
+  <div id="blog-details" class="blog-details article-details">
     <van-nav-bar title="文章详情" left-arrow fixed :border="false" @click-left="pushHref('/')"/>
 
     <div class="article-details-wrap">
@@ -10,6 +10,7 @@
           <div>
             <div class="flex-nowrap-between-center">
               <van-image
+                class="blog-details-authorID_head_img"
                 fit="cover"
                 width="0.8rem"
                 height="0.8rem"
@@ -50,43 +51,71 @@
           <div class="article-details_content__createtime">发布于： {{data.meta.createAt|dateGet}}</div>
         </div>
 
-        <div class="article-details_reply" v-if="data.reply_count">
+        <!-- 评论列表 -->
+        <div class="article-details_reply" v-if="commentList.length>0">
           <p class="article-details_reply__title">
             <van-divider>评论</van-divider>
           </p>
-          <div
-            class="article-details_reply__item"
-            v-for="(reply,replyIndex) in data.replies"
-            :key="replyIndex"
+
+          <van-list
+            v-model="loading"
+            :finished="finished"
+            :error.sync="error"
+            error-text="请求失败，点击重新加载"
+            @load="getComment"
           >
-            <div class="article-details_reply__author flex-center">
-              <van-image
-                fit="cover"
-                width="0.8rem"
-                height="0.8rem"
-                round
-                lazy-load
-                :src="reply.author.avatar_url"
-              >
-                <template v-slot:loading>
-                  <van-loading type="spinner" size="20"/>
-                </template>
-                <template v-slot:error>加载失败</template>
-              </van-image>
-              <span class="article-details_reply__author___name">{{reply.author.loginname}}</span>
-            </div>
+            <div
+              class="article-details_reply__item"
+              v-for="(reply,replyIndex) in commentList"
+              :key="replyIndex"
+            >
+              <div class="article-details_reply__author flex-center">
+                <van-image
+                  fit="cover"
+                  width="0.8rem"
+                  height="0.8rem"
+                  round
+                  lazy-load
+                  :src="BASEURL + reply.reviewer.head_img"
+                >
+                  <template v-slot:loading>
+                    <van-loading type="spinner" size="20"/>
+                  </template>
+                  <template v-slot:error>加载失败</template>
+                </van-image>
+                <span class="article-details_reply__author___name">{{reply.reviewer.nickname}}</span>
+              </div>
 
-            <div class="article-details_reply__content">
-              <div v-html="reply.content"></div>
-            </div>
+              <div class="blog-reply-target-user flex-center" v-if="reply.targetUser">
+                <span>@{{reply.targetUser.nickname}}</span>
+              </div>
 
-            <p class="article-details_reply__time">{{reply.create_at|getTimeAgo}}</p>
-            <van-divider v-if="replyIndex!=data.replies.length-1"/>
-          </div>
+              <div class="article-details_reply__content">
+                <mavon-editor
+                  v-model="reply.content"
+                  :ishljs="true"
+                  :codeStyle="code_style"
+                  :subfield="false"
+                  :defaultOpen="'preview'"
+                  :toolbarsFlag="false"
+                  :editable="false"
+                  :scrollStyle="true"
+                  ref="md"
+                ></mavon-editor>
+              </div>
+              <div class="article-details_reply__time flex-nowrap-between-center">
+                <p>{{reply.meta.createAt|getTimeAgo}}</p>
+                <p class="article-details_reply-btn" @click="onWriteComment(reply)">评论</p>
+              </div>
+              <van-divider v-if="replyIndex!=commentList.length-1"/>
+            </div>
+          </van-list>
         </div>
 
+        <van-divider v-if="finished||commentList.length<0" @click="getComment(true)">点击获取最新评论</van-divider>
+
         <div class="article-details_bottom flex-nowrap-between-center">
-          <div class="article-details_bottom__l" @click="$toast('即将开发')">
+          <div class="article-details_bottom__l" @click="onWriteComment">
             <div>
               <van-icon name="edit"></van-icon>
               <span>写评论...</span>
@@ -96,15 +125,15 @@
             <div class="flex-nowrap-between-center">
               <div>
                 <van-icon name="eye-o"/>
-                <span>{{data.views}}</span>
+                <span>{{data.views|totalQuantity}}</span>
               </div>
               <div @click="onLike">
                 <van-icon :name="data.isLike===true?'good-job':'good-job-o'"/>
-                <span>{{data.likes}}</span>
+                <span>{{data.likes|totalQuantity}}</span>
               </div>
               <div>
                 <van-icon name="chat-o"/>
-                <span>{{data.comments}}</span>
+                <span>{{data.comments|totalQuantity}}</span>
               </div>
             </div>
           </div>
@@ -120,6 +149,28 @@
     <van-image-preview v-model="showImagePre" :showIndex="false" :images="images">
       <template v-slot:index>第{{ index }}页</template>
     </van-image-preview>
+
+    <van-popup v-model="showPopup" position="bottom">
+      <div>
+        <div class="article-details-van-popup_nav flex-nowrap-between-center">
+          <van-icon name="cross" @click="showPopup = false"/>
+          <p @click="post">发送</p>
+        </div>
+        <mavon-editor
+          v-model="comment"
+          :toolbars="toolbars"
+          :ishljs="true"
+          codeStyle="atelier-estuary-dark"
+          :scrollStyle="true"
+          :subfield="false"
+          :defaultOpen="'edit'"
+          :placeholder="'输入评论...'"
+          ref="commentmd"
+          @imgAdd="imgAdd"
+          @save="post"
+        ></mavon-editor>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -132,12 +183,19 @@ import {
   Image,
   Button,
   Loading,
-  ImagePreview
+  ImagePreview,
+  Popup,
+  List
 } from "vant";
+import { mapState, mapMutations } from "vuex";
+import EXIF from "exif-js";
+import imgCompress from "../../utils/img-compress.js";
+import imgCorrect from "../../utils/img-correct.js";
+import "mavon-editor/dist/css/index.css";
 
 export default {
   name: "articleDetails",
-  mixins: [],
+  inject: ["handleShowLogin"],
   components: {
     [NavBar.name]: NavBar,
     [Skeleton.name]: Skeleton,
@@ -146,6 +204,8 @@ export default {
     [Button.name]: Button,
     [Loading.name]: Loading,
     [ImagePreview.name]: ImagePreview,
+    [Popup.name]: Popup,
+    [List.name]: List,
     mavonEditor
   },
   data() {
@@ -157,10 +217,35 @@ export default {
       code_style: "atelier-estuary-dark",
       showImagePre: false,
       index: 0,
-      images: []
+      images: [],
+      showPopup: false,
+      comment: "",
+      toolbars: {
+        link: true, // 链接
+        imagelink: true, // 图片链接
+        code: true, // code
+        table: true, // 表格
+        fullscreen: true, // 全屏编辑
+        undo: true, // 上一步
+        redo: true, // 下一步
+        trash: true, // 清空
+        save: true, // 保存（触发events中的save事件）
+        subfield: true, // 单双栏模式
+        preview: true // 预览
+      },
+      previousId: "",
+      commentList: [],
+      BASEURL,
+      loading: false,
+      error: false,
+      finished: false,
+      mainCommentID: "",
+      targetUser: ""
     };
   },
-  computed: {},
+  computed: {
+    ...mapState(["isLogin", "user"])
+  },
   watch: {},
   created() {
     this.id = this.$route.params.id;
@@ -179,19 +264,148 @@ export default {
         .then(response => {
           this.data = response.data.data;
           document.title = response.data.data.title;
+          this.getComment();
         })
         .catch(error => {
           this.$toast("获取文章详情失败");
           this.error = true;
         });
     },
+    getComment(flag = false) {
+      // 在没有评论或者所有评论加载完毕后点击，flag:ture
+      if (flag) this.loading = true;
+
+      this.$axios
+        .get(RESTFULAPI.public.blogComment, {
+          params: {
+            blogID: this.id,
+            limit: 10,
+            previousId: this.previousId
+          }
+        })
+        .then(response => {
+          this.commentList = this.commentList.concat(response.data.data);
+          this.previousId = response.data.previousId;
+          this.finished = response.data.nomore;
+          this.loading = false;
+
+          if (flag === true && response.data.nomore) {
+            this.$toast("没有更多的评论");
+          }
+        })
+        .catch(error => {
+          this.$toast("获取博客评论失败");
+          this.error = true;
+        });
+    },
     clickImg(e) {
       if (e.target.nodeName.toLowerCase() === "img") {
+
+        // 此页面中只有头像使用了van-img，除了头像以外的图片都可以预览
+        let index = Array.from(e.target.classList).findIndex(item => {
+          return item == "van-image__img";
+        });
+
+        if (index > -1) return;
+
         this.images = [e.target.src];
         this.showImagePre = true;
       }
     },
+    onWriteComment(reply = "") {
+      if (!this.isLogin) {
+        this.handleShowLogin();
+      }
+
+      // 继承主评论的id或继承子评论的父评论的id(后端判断处理)
+      this.mainCommentID = reply != "" ? reply._id : "";
+
+      this.showPopup = true;
+    },
+    post() {
+      if (this.$tools.isNull(this.comment)) {
+        return this.$toast("请输入评论");
+      }
+
+      const toast = this.$toast.loading({
+        duration: 0,
+        forbidClick: true, // 禁用背景点击
+        loadingType: "spinner",
+        content: "文章发布中"
+      });
+
+      this.$axios
+        .post(RESTFULAPI.public.blogComment, {
+          _id: this.id,
+          content: this.comment,
+          mainCommentID: this.mainCommentID,
+          targetUser: this.targetUser
+        })
+        .then(response => {
+          this.showPopup = false;
+          this.comment = "";
+          this.mainCommentID = "";
+          this.$toast(response.data.msg);
+          this.commentList.unshift(response.data.data);
+          this.data.comments = response.data.comments;
+          this.$toast(response.data.msg);
+        })
+        .catch(error => {
+          // 清除提示
+          toast.clear();
+          this.$toast(error.data.msg);
+        });
+    },
+    async imgAdd(pos, file) {
+      let base64 = "",
+        url;
+      // 修正图片方向
+      await imgCorrect(EXIF, file.miniurl)
+        .then(res => {
+          base64 = res.base64;
+        })
+        .catch(err => {
+          this.$toast(err.msg);
+        });
+
+      await imgCompress(base64)
+        .then(data => {
+          base64 = data.base64;
+        })
+        .catch(err => {
+          this.$toast(err.msg);
+        });
+
+      const toast = this.$toast.loading({
+        duration: 1000,
+        forbidClick: true, // 禁用背景点击
+        loadingType: "spinner",
+        content: "上传图片..."
+      });
+
+      this.$axios
+        .post(RESTFULAPI.public.uploadImg, {
+          type: "blog",
+          base64Array: [base64]
+        })
+        .then(response => {
+          // 清除提示
+          toast.clear();
+          url = response.data.data.pathArray[0];
+          this.$refs.commentmd.$img2Url(pos, BASEURL + url);
+        })
+        .catch(error => {
+          // 清除提示
+          toast.clear();
+          this.$refs.commentmd.$img2Url(pos, "图片上传失败");
+          this.$toast(error.data.msg);
+        });
+    },
     onLike() {
+      if (!this.isLogin) {
+        this.handleShowLogin();
+      }
+
       this.$axios
         .put(RESTFULAPI.public.blogLike, {
           _id: this.id
@@ -199,21 +413,21 @@ export default {
         .then(response => {
           this.data.isLike = response.data.isLike;
           this.data.likes = response.data.likes;
-          console.log("response", response);
         })
-        .catch(error => {
-          console.log("error", error);
-        });
+        .catch(error => {});
     }
   },
   updated() {
-    let blog = document.getElementById("blog-details-content");
+    // let blog = document.getElementById("blog-details-content");
+    let blog = document.getElementById("blog-details");
+
     if (blog !== null) {
       blog.addEventListener("click", this.clickImg, false);
     }
   },
   destroyed() {
-    let blog = document.getElementById("blog-details-content");
+    // let blog = document.getElementById("blog-details-content");
+    let blog = document.getElementById("blog-details");
     if (blog !== null) {
       blog.removeEventListener("click", this.clickImg, false);
     }
@@ -518,6 +732,35 @@ export default {
         margin-left: 6px;
         font-size: 12px;
       }
+    }
+  }
+
+  .article-details-van-popup_nav {
+    padding: 10px 10px;
+    font-size: 14px;
+    color: #888888;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.blog-details {
+  .article-details_reply__item {
+    .article-details_reply__content {
+      padding: 0;
+      background: none;
+    }
+
+    .van-divider {
+      margin: 5px 0;
+    }
+
+    .blog-reply-target-user {
+      padding: 0 10px;
+      color: #569cd6;
+      font-size: 14px;
     }
   }
 }

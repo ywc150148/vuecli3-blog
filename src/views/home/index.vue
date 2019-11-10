@@ -9,10 +9,7 @@
         <van-tab v-for="(item,cat_index) in category" :key="cat_index" :title="item.name">
           <div class="home-tabs_tab__list" :ref="'tab__list-'+cat_index">
             <!-- 骨架屏 -->
-            <div
-              class="home-article-skeleton"
-              v-show="!category[cat_index].list.length && !category[cat_index].finished && category[active].isLoading"
-            >
+            <div class="home-article-skeleton" v-show="loading && category[active].isLoading">
               <van-skeleton
                 v-for="skeleton in 3"
                 :key="skeleton"
@@ -24,16 +21,20 @@
             </div>
 
             <!-- 下拉 -->
+
+            <!-- :disabled="!category[cat_index]" -->
             <van-pull-refresh
               v-model="category[cat_index].isLoading"
               @refresh="onRefresh"
-              :disabled="category[cat_index].loading"
-              style="min-height:9rem"
+              style="min-height:9rem;"
             >
               <!-- 分类页 -->
               <van-list
+                style="min-height:9rem;"
                 v-model="loading"
+                v-show="!category[cat_index].isLoading"
                 :error.sync="category[cat_index].error"
+                :offset="100"
                 error-text="请求失败，点击重新加载"
                 :finished="category[cat_index].finished"
                 :finished-text="category[cat_index].finished_text"
@@ -48,9 +49,9 @@
                 >
                   <div class="home-article_title-wrap flex-nowrap-center">
                     <p class="home-article_title">{{item.title}}</p>
-                    <span
+                    <!-- <span
                       v-if="item.categoryID"
-                    >{{item.categoryID.name}}{{item.subCategoryID? '/'+item.subCategoryID.name:''}}</span>
+                    >{{item.categoryID.name}}{{item.subCategoryID? '/'+item.subCategoryID.name:''}}</span> -->
                   </div>
                   <div class="home-article_pre flex-nowrap-between-center">
                     <div class="home-article_pre__l">
@@ -95,10 +96,10 @@
                   </div>
                   <div class="home-article_bottom">
                     <div class="flex-nowrap">
-                      <div>
+                      <!-- <div>
                         <van-icon name="eye-o"/>
-                        <span>{{item.views}}</span>
-                      </div>
+                        <span>{{item.views|totalQuantity}}</span>
+                      </div> -->
                       <div>
                         <van-icon :name="item.isLike===true?'good-job':'good-job-o'"/>
                         <span>{{item.likes|totalQuantity}}</span>
@@ -223,7 +224,6 @@ export default {
             item.loading = false;
             item.isLoading = false;
             item.error = false;
-            item.page = 1;
             item.finished_text =
               item.count > 0 && item.finished ? "没有更多了" : "没有数据";
           });
@@ -232,7 +232,7 @@ export default {
           this.$toast("获取分类失败");
         });
     },
-    getData(active) {
+    getData(active, refresh = false) {
       let params = {
         categoryID: this.category[active]._id,
         previousId: this.category[active].previousId,
@@ -242,6 +242,10 @@ export default {
       this.$axios
         .get(RESTFULAPI.public.blog, { params })
         .then(response => {
+          // if (refresh) {
+          //   this.category[active].list = [];
+          // }
+
           let data = response.data.data;
           this.category[active].list = [...this.category[active].list, ...data];
           this.category[active].finished = response.data.nomore;
@@ -280,6 +284,8 @@ export default {
       // this.$toast(this.keywords);
     },
     onLoad() {
+      if (this.category[this.active].isLoading) return;
+
       if (this.category[this.active].error) {
         this.onRefresh();
       } else {
@@ -289,11 +295,11 @@ export default {
     onRefresh() {
       this.loading = true;
       this.category[this.active].list = [];
-      this.category[this.active].page = 1;
       this.category[this.active].finished = false;
       this.category[this.active].previousId = "";
       this.category[this.active].error = false;
-      this.onLoad();
+      // this.onLoad();
+      this.getData(this.active, true);
     }
   }
 };
@@ -445,7 +451,8 @@ export default {
     }
 
     .home-article_bottom {
-      margin-top: 5px;
+      padding: 10px 0 5px;
+      // margin-top: 5px;
       color: #999999;
 
       .van-icon {

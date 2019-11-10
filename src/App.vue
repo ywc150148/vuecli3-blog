@@ -191,8 +191,7 @@ html {
   }
 }
 
-#app .article-details_content {
-
+#app .blog-details {
   .v-note-wrapper {
     min-height: auto !important;
   }
@@ -214,6 +213,14 @@ html {
     .scroll-style-border-radius {
       background-color: none !important;
       background: none !important;
+    }
+
+    h1 {
+      font-size: 1.5em;
+    }
+
+    h2 {
+      font-size: 1.3em;
     }
   }
 }
