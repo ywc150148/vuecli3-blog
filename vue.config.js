@@ -31,6 +31,7 @@ const cdn = {
   ]
 }
 
+
 module.exports = {
   // 生成环境 sourceMap
   productionSourceMap: false,
@@ -52,15 +53,15 @@ module.exports = {
     }
   },
   chainWebpack: config => {
-    // ============压缩图片 start============
-    config.module
-      .rule('images')
-      .use('image-webpack-loader')
-      .loader('image-webpack-loader')
-      .options({
-        bypassOnDebug: true
-      })
-      .end()
+    // ============压缩图片 start 老师报错，不要了============
+    // config.module
+    //   .rule('images')
+    //   .use('image-webpack-loader')
+    //   .loader('image-webpack-loader')
+    //   .options({
+    //     bypassOnDebug: true
+    //   })
+    //   .end()
     // ============压缩图片 end============
 
     // ============注入cdn start============
@@ -81,9 +82,9 @@ module.exports = {
       config.plugins.push(
         new UglifyJsPlugin({
           uglifyOptions: {
-            warnings: false, // 若打包错误，则注释这行
             //生产环境自动删除console
             compress: {
+              // warnings: false, // 若打包错误，则注释这行
               drop_debugger: true,
               drop_console: true,
               pure_funcs: ['console.log']
