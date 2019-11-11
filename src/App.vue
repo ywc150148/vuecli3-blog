@@ -85,7 +85,7 @@ export default {
       window.addEventListener("popstate", this.popState, false); //false阻止默认事件
     }
 
-    console.log("app vue...")
+    console.log("app vue...");
   },
   destroyed() {
     window.removeEventListener("popstate", this.popState, false);

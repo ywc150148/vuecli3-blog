@@ -21,8 +21,8 @@
           v-model="fileList"
           preview-image
           :max-count="1"
-          @delete="onUnshowUpload"
           :after-read="beforeRead"
+          @delete="onUnshowUpload"
         />
       </div>
     </div>
@@ -137,9 +137,11 @@ import {
   Loading
 } from "vant";
 import { mapState, mapMutations } from "vuex";
-import imgCompress from "../../utils/img-compress.js";
 import { encrypt } from "../../utils/crypto-js";
 import VueEvent from "../../utils/VueEvent.js";
+import EXIF from "exif-js";
+import imgCompress from "../../utils/img-compress.js";
+import imgCorrect from "../../utils/img-correct";
 
 export default {
   beforeRouteEnter(to, from, next) {
@@ -206,10 +208,19 @@ export default {
       }
     },
     beforeRead(file) {
-      this.showUpload = true;
+      // 修正图片方向
+      imgCorrect(EXIF, this.fileList[0].content)
+        .then(res => {
+          this.fileList[0].content = res.base64;
+          this.showUpload = true;
+        })
+        .catch(err => {
+          this.$toast(err.msg);
+        });
     },
     handleUpload() {
-      imgCompress(this.fileList[0].content, { width: 100 })
+      // 压缩图片
+      imgCompress(this.fileList[0].content, { width: 200 })
         .then(data => {
           this.uploadImg(data.base64);
         })
@@ -217,6 +228,8 @@ export default {
           this.$toast(err.msg);
           this.onUnshowUpload();
         });
+
+      return true;
     },
     uploadImg(base64) {
       this.$axios
@@ -388,6 +401,7 @@ export default {
 
 <style scoped lang="less">
 @import "../../assets/css/user.less";
+
 
 .user-head_row {
   position: relative;
