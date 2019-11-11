@@ -25,6 +25,11 @@ npm run test
 npm run lint
 ```
 
+### 进入图形界面
+```
+vue ui
+```
+
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
